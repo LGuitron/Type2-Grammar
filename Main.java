@@ -9,25 +9,24 @@ public class Main
         String initialSymbol;
 
         nonTerminalSymbols.add("S");
-        nonTerminalSymbols.add("C");
-        nonTerminalSymbols.add("D");
+        nonTerminalSymbols.add("P");
         
-        productionRules.add("S->CD");
-        productionRules.add("C->0C");
-        productionRules.add("C->0");
-        productionRules.add("D->1D");
-        productionRules.add("D->1");
+        productionRules.add("S->PP");
+        productionRules.add("P->null");
+        productionRules.add("P->aPb");
+        productionRules.add("P->Pb");
         
         initialSymbol = "S";     
 
         Grammar grammar = new Grammar(nonTerminalSymbols, productionRules, initialSymbol);
-        System.out.println(grammar.testChain("001"));
-        System.out.println(grammar.testChain("01"));
-        System.out.println(grammar.testChain("011111111111"));
-        System.out.println(grammar.testChain("000111"));
+        //System.out.println(grammar.testChain(""));
+        //System.out.println(grammar.testChain("abab"));
+        System.out.println(grammar.testChain("abbaaabbb"));
+        //System.out.println(grammar.testChain("b"));
+        //System.out.println(grammar.testChain("bb"));
         
-        System.out.println(grammar.testChain(""));
-        System.out.println(grammar.testChain("00101"));
-        System.out.println(grammar.testChain("010111"));
+        //System.out.println(grammar.testChain("aababb"));
+        //System.out.println(grammar.testChain("aabba"));
+        //System.out.println(grammar.testChain("aba"));
     }
 }

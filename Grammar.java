@@ -15,15 +15,18 @@ public class Grammar
     
     public boolean testChain(String chain)
     {
-        return testRecursive(this.startSymbol, chain);
+        return testRecursive(this.startSymbol, chain, "");
     }
     
-    private boolean testRecursive(String currentChain, String chain)
+    private boolean testRecursive(String currentChain, String chain, String ruleHistory)
     {
         //System.out.println(currentChain);
         if(currentChain.equals(chain))
+        {
+            System.out.println(ruleHistory);
             return true;
-
+        }
+        
         for (String rule : this.productionRules)
         {
             String[] ruleSymbols  = rule.split("->");
@@ -41,7 +44,7 @@ public class Grammar
                     
                     if(removeNonTerminals(nextChain).length() <= chain.length())
                     {
-                        boolean foundMatch = testRecursive(nextChain, chain);
+                        boolean foundMatch = testRecursive(nextChain, chain,ruleHistory + ", chain: " + currentChain.toString() + " index: " + i + " " + rule + "\n");
                         if(foundMatch)
                             return true;
                     }
