@@ -19,14 +19,6 @@ public class Main
         initialSymbol = "S";     
 
         Grammar grammar = new Grammar(nonTerminalSymbols, productionRules, initialSymbol);
-        //System.out.println(grammar.testChain(""));
-        //System.out.println(grammar.testChain("abab"));
-        System.out.println(grammar.testChain("abbaaabbb"));
-        //System.out.println(grammar.testChain("b"));
-        //System.out.println(grammar.testChain("bb"));
-        
-        //System.out.println(grammar.testChain("aababb"));
-        //System.out.println(grammar.testChain("aabba"));
-        //System.out.println(grammar.testChain("aba"));
+        System.out.println(grammar.testChain("abbaaabbb").derivedSuccessful);
     }
 }
