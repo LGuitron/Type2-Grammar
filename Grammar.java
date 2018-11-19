@@ -3,7 +3,7 @@ import java.util.ArrayList;
 
 public class Grammar 
 {
-    private HashSet<String> nonTerminalSymbols;
+    public HashSet<String> nonTerminalSymbols;
     private HashSet<String> productionRules;
     private String startSymbol;
     
@@ -91,9 +91,6 @@ public class Grammar
                           newProductionHistory.add(step);
                         }
                         newProductionHistory.add(new ProductionStep(currentChain.toString(), i, rule));
-                        //boolean foundMatch = testRecursive(nextChain, chain, newProductionHistory);
-                        //if(foundMatch)
-                        //    return true;
                         DerivationTree derivationTree = testRecursive(nextChain, chain, newProductionHistory);
                         if(derivationTree.derivedSuccessful)
                           return derivationTree;

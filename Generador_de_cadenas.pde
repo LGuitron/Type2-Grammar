@@ -1,3 +1,7 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+
 // Grammar Object
 Grammar grammar;
 
@@ -41,10 +45,28 @@ int infoSpacing;
 String nonTerminalSymbols;
 String initialSymbol;
 String productionRules;
+String insertedChain;
 
 // Boolean for displaying result and DerivationTree object
 DerivationTree derivationTree;
 boolean displayResult;
+
+// Parameters for derivation tree visual representation
+// Store position of nonTerminal nodes in lists
+float startXpos;
+float startYpos;
+
+HashMap<Integer, Float> nodeXpositions;
+HashMap<Integer, Float> nodeYpositions;
+HashMap<Integer, Integer> nodeDepth;
+
+int nodeSeparationX;
+float xSeparationDecay;
+int nodeSeparationY;
+
+int nodeWidth;
+int textOffsetX;
+int textOffsetY;
 
 void setup() {
   fullScreen();
@@ -86,8 +108,21 @@ void setup() {
   nonTerminalSymbols = "[]";
   initialSymbol      = "";
   productionRules    = "";
+  insertedChain      = "";
   
   displayResult = false;
+
+  startXpos = (float)width/2;
+  startYpos =(float)height/3;  
+  nodeSeparationX = width/3;
+  nodeSeparationY = height/12;
+  
+  xSeparationDecay = 0.6;
+  
+  nodeWidth = 40;
+  textOffsetX = 5;
+  textOffsetY = 5;
+  
 }
 
 void draw() {
@@ -123,7 +158,7 @@ void draw() {
   text("V : " + nonTerminalSymbols, infoX , infoY);
   text("S : " + initialSymbol, infoX , 2*infoY); 
   text("P : " + productionRules, infoX , 3*infoY); 
-  
+  text("Cadena : " + insertedChain, infoX , 4*infoY); 
   fill(255,165,0);
   
   // Draw derivation tree
@@ -325,6 +360,7 @@ class TextBox {
 
       else if(state == chainState){
         derivationTree = grammar.testChain(txt);
+        insertedChain = txt;
         displayResult     = true;
       }
       
@@ -363,12 +399,114 @@ class TextBox {
 }
 
 void drawDerivationTree()
-{
+{ 
   if(derivationTree.derivedSuccessful)
   {
-    fill(0);
-    textSize(48);
-    text("Cadena aceptada", 0.35*width, 0.5*height);
+    nodeXpositions = new HashMap<Integer,Float>();
+    nodeYpositions = new HashMap<Integer,Float>();
+    nodeDepth      = new HashMap<Integer, Integer>();
+    nodeXpositions.put(0, startXpos);
+    nodeYpositions.put(0, startYpos);
+    nodeDepth.put(0,0);
+  
+    for (ProductionStep step : derivationTree.productionSteps)
+    {
+        // Check number of descentants of this node
+        String originalChain  = step.originalChain;
+        String generatedChain = step.ruleApplied.split("->")[1];
+        int modifiedIndex     = step.modifiedIndex;
+        
+        // Get X and Y positions of the current node and remove entry from arraylist
+        float posX = nodeXpositions.remove(modifiedIndex);
+        float posY = nodeYpositions.remove(modifiedIndex);
+        int depth  = nodeDepth.remove(modifiedIndex);
+
+        // X separation factor gets reduced for deeper nodes
+        float xSeparationFactor = (float)Math.pow(xSeparationDecay,depth);
+
+        // Draw node derivation normally
+        if (!generatedChain.equals("null"))
+        {
+          
+          // Distribute children down (considering one more node)
+          int childAmount = generatedChain.length();
+          float angleDelta = (float)Math.PI/(childAmount+1);
+          
+          // Update keys for all entries in the hash map greater than the current modified index and add the childAmount to the key
+          for (Integer key : nodeXpositions.keySet()) 
+          {
+            if(key>modifiedIndex)
+            {
+              float tempX = nodeXpositions.remove(key);
+              float tempY = nodeYpositions.remove(key);
+              int tempD = nodeDepth.remove(key);
+              nodeXpositions.put(key+childAmount - 1, tempX);
+              nodeYpositions.put(key+childAmount - 1 , tempY);
+              nodeDepth.put(key+childAmount - 1 , tempD);
+            }
+          }
+          
+          
+          
+          // Draw each of the child nodes
+          for (int i=1; i<=childAmount; i++)
+          {
+            float angle = (float)Math.PI + i*angleDelta;
+            float posXchild = posX + (float)(xSeparationFactor*nodeSeparationX*Math.cos(angle));
+            float posYchild = posY - (float)(nodeSeparationY*Math.sin(angle));
+            fill(255);
+            line(posX, posY, posXchild, posYchild);
+            fill(0,192,0);
+            
+            String childSymbol = Character.toString(generatedChain.charAt(i-1));
+            // If this symbol is nonTerminal add its position into the node positions arraylists
+            if(grammar.nonTerminalSymbols.contains(childSymbol))
+            {
+              fill(255,165,0);
+              nodeXpositions.put(modifiedIndex + i - 1, posXchild);
+              nodeYpositions.put(modifiedIndex + i - 1, posYchild);
+              nodeDepth.put(modifiedIndex + i - 1, depth+1);
+            }
+            ellipse(posXchild, posYchild, nodeWidth, nodeWidth);
+            fill(0);
+            text(childSymbol, posXchild - textOffsetX, posYchild + textOffsetY);
+          }
+        }
+        
+        // Draw derivation to null children below 
+        else
+        {
+            float posXchild = posX;
+            float posYchild = posY + nodeSeparationY;
+            fill(255);
+            line(posX, posY, posXchild, posYchild);
+            fill(0,192,0);
+            ellipse(posXchild, posYchild, nodeWidth, nodeWidth);
+            fill(0);
+            text("/", posXchild - textOffsetX, posYchild + textOffsetY);
+            
+            // Update keys for all entries in the hash map greater than the current modified index and substract 1 for the empty chain
+            for (Integer key : nodeXpositions.keySet()) 
+            {
+              if(key>modifiedIndex)
+              {
+                float tempX = nodeXpositions.remove(key);
+                float tempY = nodeYpositions.remove(key);
+                int tempD = nodeDepth.remove(key);
+                nodeXpositions.put(key - 1, tempX);
+                nodeYpositions.put(key - 1 , tempY);
+                nodeDepth.put(key-1, tempD);
+              }
+            }
+        }
+                  
+        // Draw parent node at the end
+        fill(255,165,0);
+        ellipse(posX, posY, nodeWidth, nodeWidth);
+        fill(0);
+        text(originalChain.charAt(step.modifiedIndex), posX - textOffsetX, posY + textOffsetY);
+        
+    }
   }
   else
   {
